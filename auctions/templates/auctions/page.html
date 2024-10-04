@@ -1,0 +1,109 @@
+<!-- FILEPATH: /Users/wallacemendes/dev-workspace/cs50w/lecture4/project2/commerce/auctions/templates/auctions/listingpage.html -->
+
+{% extends "auctions/layout.html" %}
+{% load mathfilters %}
+
+{% block body %}
+    <div class="container">
+        <div class="row" style="min-height: 700px;">
+            <div class="col-md-6">
+                <img alt="{{ listing.title }}" class="img-fluid" src="{{ listing.image_url| default:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}}">
+            </div>
+            <div class="col-md-6">
+                <h2>{{ listing.title }}</h2>
+                <div><a href="{%url 'index' %}?category={{listing.category}}" class="badge badge-pill badge-info">Category: {{ listing.category }}</a></div>
+                <br>
+                <p>{{ listing.description }}</p>
+                {% if listing.is_active %}<p>Current Bid: ${{listing.current_bid}}</p>
+                {% else %}<h5><span class="badge badge-danger">This auction is finished</span></h5>{% endif %}
+
+                {% if not is_owner and listing.is_active %}
+                <form method="POST" action="{% url 'bid' %}">
+                    {% csrf_token %}
+                     <div class="input-group mb-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Bid Amount</span>
+                        </div>
+                        <input type="number" name="bid-amount" placeholder="${{ listing.current_bid |addition:0.01 }}" aria-describedby="basic-addon1" id="bid-amount" class="form-control col-sm-3" min="{{ listing.current_bid |addition:0.01 }}" step="0.01" required>
+                        <input type="hidden" name="listing-id" value="{{ listing.id }}">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-outline-primary">Bid</button>
+                        </div>
+                    </div>
+                </form>
+                    {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'watchlist' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="listing-id" value="{{ listing.id }}">
+                    <input type="hidden" name="remove" value="{{in_watchlist|yesno}}">
+                    <button type="submit" class="btn btn-outline-primary">{{ in_watchlist|yesno:'Remove from Watchlist,Add to Watchlist' }}</button>
+                </form>  
+                    {% endif %}
+                {% elif is_owner %}
+                <form method="POST" action="{% url 'openclose' %}">
+                    {% csrf_token %}
+                    {% if not listing.is_active %}
+                    <div class="badge"><p>Winning bid: ${{listing.current_bid}}</p></div>
+                    <span class="badge badge-success">Winner: {{listing.current_winner}}</span>
+                    {% endif %}
+                    <div>
+                        <input type="hidden" name="listing-id" value="{{ listing.id }}">
+                        <button type="submit" class="btn btn-outline-primary">{{listing.is_active|yesno:'Close,Open'}}</button>
+                    </div>
+                    <br>
+                </form>  
+                {% elif user_bids %}
+                    {% if user == listing.current_winner %}
+                    <h5><span class="badge badge-success">Congrats! You won this auction.</span></h5>
+                    {% else %}
+                    <h5><span class="badge badge-danger">Sorry! The winner was {{listing.current_winner}}</span></h5>
+                    <div class="badge">Winner bid: ${{listing.current_bid}}</div>
+                    {% endif %}
+                {% endif %}
+
+                {% if listing.is_active and user_bids %}
+                </br>
+                <div style="display:flex; flex-direction:column;">
+                    <div  class="badge badge-dark">My Bids</div>
+                    <div>
+                        {% for bid in user_bids reversed %}
+                        <div class="badge">${{bid.value}}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+        <div class="column mt-4">
+            <h3>Comments</h3>
+
+            {% for comment in comments %}
+            <div class="mt-4">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <span style="display: flex; justify-content: space-between;"><h5 class="card-title">{{comment.user}} </h5><small class="text-muted">{{comment.timestamp}}</small></span>
+                        <p class="card-text">{{comment.text_content}}</p>
+                    </div>
+                </div>
+            {% endfor %}
+            {% if not comments %}
+            <div class="mt-4 text-center">
+                <p>There are no comments yet.</p>
+            </div>
+            {% endif %}
+
+            </div>
+            {% if user.is_authenticated %}
+            <hr>
+            <form method="POST" action="{% url 'comment' %}">
+                {% csrf_token %}
+                <input type="hidden" name="listing-id" value="{{ listing.id }}">
+                {{comment_form}}
+                <hr>
+                <button type="submit" class="btn btn-outline-primary">Comment</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

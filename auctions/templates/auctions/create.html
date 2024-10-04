@@ -1,0 +1,32 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div class="container mt-5">
+        <div>
+            <h1>Create a new listing</h1>
+        </div>
+        <form action="{% url 'create' %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                {% if form.errors %}
+                {{form.errors}}
+                {% endif %}
+                {% for field in form %}
+                <div class="container d-flex justify-content-start flex-row">
+                    <div class="p-2" style="display: inline-block; width: 300px;">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+                    </div>
+                    <div class="p-2" style="display: inline-block; width: 100%;">
+                        {{ field }}
+                    </div>
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                <hr>
+                {% endfor %}
+            </div>
+            <input type="submit" value="Submit" class="btn btn-primary btn-lg">
+        </form>
+    </div>
+{% endblock %}

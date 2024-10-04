@@ -1,0 +1,38 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    {% if category %}
+    <h2>{{category}} Listings</h2>
+    {% else %}
+    <h2>Active Listings</h2>
+    {% endif %}
+
+
+    <div class="container mt-5">
+        {% if not listing %}
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">No listings found</h4>
+                {% if category %}
+                <p>There are no listings in this category.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+        <div class="row">
+        {% for item in listing  %}
+            <div class="col-md-4 col-sm-6 col-xl-3 mb-4">
+                <div class="card">
+                    <div class="position-relative d-flex align-items-center justify-content-center" style="width: auto; height: 300px; overflow: hidden;">
+                        <img  class="card-img-top img-fluid position-absolute" style="width: 300px; height: auto;" alt="Imagem do Item" src="{{ item.image_url|default:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png" }}">
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text"><small class="text-muted">{{item.category.name}}</small></p>
+                        <h5 class="card-title">{{item.title}}</h5>
+                        <p class="card-text">${{item.current_bid}}</p>
+                        <a class="stretched-link" href="{% url 'listing' item.id %}"></a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+{% endblock %}
